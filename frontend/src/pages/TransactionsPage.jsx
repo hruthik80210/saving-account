@@ -412,13 +412,17 @@ export const TransactionsPage = ({
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                 Booking Date (Transaction Date)
               </label>
-              <input
-                type="date"
-                required
-                value={formData.transaction_date}
-                onChange={(e) => setFormData({ ...formData, transaction_date: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:outline-none focus:border-sky-500"
-              />
+              <div className="relative">
+                <Calendar className="pointer-events-none absolute left-3 top-1/2 w-4 h-4 -translate-y-1/2 text-slate-500" />
+                <input
+                  type="date"
+                  required
+                  value={formData.transaction_date}
+                  onChange={(e) => setFormData({ ...formData, transaction_date: e.target.value })}
+                  onClick={(e) => e.currentTarget.showPicker?.()}
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:outline-none focus:border-sky-500"
+                />
+              </div>
               <span className="text-[10px] text-slate-500 mt-1 block">Date when entry is initiated</span>
             </div>
 
@@ -428,13 +432,17 @@ export const TransactionsPage = ({
                 <span>Value Date (Interest Date)</span>
                 <span className="text-[10px] text-sky-400 font-normal">Core Field</span>
               </label>
-              <input
-                type="date"
-                required
-                value={formData.value_date}
-                onChange={(e) => setFormData({ ...formData, value_date: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:outline-none focus:border-sky-500 font-semibold"
-              />
+              <div className="relative">
+                <Calendar className="pointer-events-none absolute left-3 top-1/2 w-4 h-4 -translate-y-1/2 text-sky-400" />
+                <input
+                  type="date"
+                  required
+                  value={formData.value_date}
+                  onChange={(e) => setFormData({ ...formData, value_date: e.target.value })}
+                  onClick={(e) => e.currentTarget.showPicker?.()}
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:outline-none focus:border-sky-500 font-semibold"
+                />
+              </div>
               <span className="text-[10px] text-slate-400 mt-1 block">
                 Determines when amount affects closing balance & interest
               </span>
