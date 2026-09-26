@@ -1,0 +1,6 @@
+transaction_date,value_date,type,amount,description,reference
+2026-07-01,2026-07-01,OPENING_BALANCE,50000.00,Initial Balance,OPN-01
+2026-07-05,2026-07-05,DEPOSIT,10000.00,Cash Deposit Branch 04,DEP-02
+2026-07-12,2026-07-12,WITHDRAWAL,5000.00,ATM Cash Withdrawal,WDL-03
+2026-07-20,2026-07-20,DEPOSIT,20000.00,NEFT Inward - Salary Topup,DEP-04
+2026-07-25,2026-07-22,DEPOSIT,15000.00,Value-Dated Cheque Clearance,CHQ-05
