@@ -22,11 +22,23 @@ class ProfileCreate(ProfileBase):
 
 class ProfileResponse(ProfileBase):
     id: UUID
+    role: str
     created_at: datetime
     updated_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class RegisterRequest(BaseModel):
+    full_name: str = Field(min_length=1, max_length=255)
+    email: str = Field(min_length=3, max_length=255)
+    password: str = Field(min_length=8, max_length=128)
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
 
 # ==============================================================================

@@ -80,13 +80,13 @@ export const AccountsPage = ({
           </p>
         </div>
 
-        <button
+        {user?.role === 'ADMIN' && <button
           onClick={onOpenCreateModal}
           className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs shadow-glow transition-all active:scale-95"
         >
           <Plus className="w-4 h-4" />
           <span>Open New Account</span>
-        </button>
+        </button>}
       </div>
 
       {/* Accounts Grid */}

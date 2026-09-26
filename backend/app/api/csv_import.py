@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from backend.app.database import get_db
 from backend.app.models.models import Profile
 from backend.app.schemas.schemas import CSVValidateResponse, CSVConfirmRequest
-from backend.app.services.auth_service import get_current_user
+from backend.app.services.auth_service import get_current_user, require_admin
 from backend.app.services.csv_import_service import CSVImportService
 
 router = APIRouter(prefix="/api/import", tags=["CSV Import"])
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/import", tags=["CSV Import"])
 async def validate_csv_upload(
     account_id: str = Form(...),
     file: UploadFile = File(...),
-    current_user: Profile = Depends(get_current_user),
+    current_user: Profile = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     if not file.filename.endswith(".csv"):
@@ -38,7 +38,7 @@ async def validate_csv_upload(
 @router.post("/csv/confirm")
 def confirm_csv_import(
     payload: CSVConfirmRequest,
-    current_user: Profile = Depends(get_current_user),
+    current_user: Profile = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     imported_count = CSVImportService.confirm_import(db, payload.account_id, payload.valid_rows)

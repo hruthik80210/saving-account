@@ -12,7 +12,7 @@ from backend.app.schemas.schemas import (
     InterestSlabUpdate,
     InterestSlabResponse,
 )
-from backend.app.services.auth_service import get_current_user
+from backend.app.services.auth_service import get_current_user, require_admin
 
 router = APIRouter(prefix="/api/interest-slabs", tags=["Interest Slabs"])
 
@@ -29,7 +29,7 @@ def get_interest_slabs(
 @router.post("", response_model=InterestSlabResponse, status_code=status.HTTP_201_CREATED)
 def create_interest_slab(
     payload: InterestSlabCreate,
-    current_user: Profile = Depends(get_current_user),
+    current_user: Profile = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     new_slab = InterestSlab(
@@ -51,7 +51,7 @@ def create_interest_slab(
 def update_interest_slab(
     slab_id: str,
     payload: InterestSlabUpdate,
-    current_user: Profile = Depends(get_current_user),
+    current_user: Profile = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     slab = db.query(InterestSlab).filter(InterestSlab.id == slab_id).first()
@@ -81,7 +81,7 @@ def update_interest_slab(
 @router.delete("/{slab_id}")
 def delete_interest_slab(
     slab_id: str,
-    current_user: Profile = Depends(get_current_user),
+    current_user: Profile = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     slab = db.query(InterestSlab).filter(InterestSlab.id == slab_id).first()

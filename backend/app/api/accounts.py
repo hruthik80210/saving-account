@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from backend.app.database import get_db
 from backend.app.models.models import Account, Profile, Transaction
 from backend.app.schemas.schemas import AccountCreate, AccountResponse, AccountSummaryResponse
-from backend.app.services.auth_service import get_current_user
+from backend.app.services.auth_service import get_current_user, require_admin
 from backend.app.services.transaction_service import to_engine_record
 from backend.app.interest_engine.engine import calculate_balance_on_date, InterestEngine
 from backend.app.services.interest_service import to_engine_slab
@@ -31,7 +31,7 @@ def get_user_accounts(
 @router.post("", response_model=AccountResponse, status_code=status.HTTP_201_CREATED)
 def create_account(
     payload: AccountCreate,
-    current_user: Profile = Depends(get_current_user),
+    current_user: Profile = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     existing = db.query(Account).filter(Account.account_number == payload.account_number).first()

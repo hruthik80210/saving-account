@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, Wallet, ChevronDown, Plus, User, Check, Sparkles } from 'lucide-react';
+import { Menu, Wallet, ChevronDown, Plus, User, Check, Sparkles, LogOut } from 'lucide-react';
 
 export const Navbar = ({
   accounts,
@@ -9,6 +9,7 @@ export const Navbar = ({
   onOpenMobileMenu,
   onOpenAddTx,
   onCreateAccount,
+  onLogout,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -16,12 +17,12 @@ export const Navbar = ({
     <header className="sticky top-0 z-30 h-16 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/80 px-4 sm:px-8 flex items-center justify-between">
       {/* Left: Mobile hamburger & account selector */}
       <div className="flex items-center space-x-4">
-        <button
+        {user?.role === 'ADMIN' && <button
           onClick={onOpenMobileMenu}
           className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
         >
           <Menu className="w-5 h-5" />
-        </button>
+        </button>}
 
         {/* Account Selector Dropdown */}
         <div className="relative">
@@ -101,13 +102,13 @@ export const Navbar = ({
 
       {/* Right actions: Add Transaction button & User Profile */}
       <div className="flex items-center space-x-3">
-        <button
+        {user?.role === 'ADMIN' && <button
           onClick={onOpenAddTx}
           className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white text-xs font-semibold shadow-glow transition-all active:scale-95"
         >
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">Add Transaction</span>
-        </button>
+        </button>}
 
         {/* Demo Mode Badge */}
         <div className="hidden md:flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
@@ -124,8 +125,9 @@ export const Navbar = ({
             <div className="text-xs font-semibold text-white leading-none">
               {user?.full_name || 'Rajesh Sharma'}
             </div>
-            <div className="text-[10px] text-slate-400 mt-0.5">Verified Customer</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">{user?.role || 'CUSTOMER'}</div>
           </div>
+          <button onClick={onLogout} title="Log out" className="p-2 text-slate-400 hover:text-rose-400"><LogOut className="w-4 h-4" /></button>
         </div>
       </div>
     </header>

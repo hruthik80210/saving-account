@@ -280,6 +280,23 @@ limit 10;
 
 7. Remove the test row when finished.
 
-### Current authentication limitation
+### Authentication and roles
 
-The current frontend initializes with `/api/auth/demo-login` and the `demo-token`. That is suitable for local/demo use, but it is not production authentication. For a public deployment, replace the demo login with Supabase Auth sign-in and send the resulting access token to the backend. Keep `SUPABASE_JWT_SECRET` configured on Render so real tokens are verified.
+The frontend now provides email/password login, logout, and customer registration. Registration
+always creates a `CUSTOMER`; only `ADMIN` profiles can create or edit accounts, transactions,
+interest slabs, imports, postings, or database seed/purge data. These permissions are enforced by
+the backend as well as hidden in the customer UI.
+
+Writes are committed synchronously to `DATABASE_URL`, and the active frontend refreshes account,
+dashboard, transaction, and passbook data every three seconds so changes from another session become
+visible quickly. This is polling, not Supabase Realtime. True Supabase Realtime requires migrating
+the browser session to Supabase Auth and enabling authenticated table subscriptions; do not expose
+the service-role key or make business tables publicly readable just to create a websocket channel.
+
+For local/demo use, the seeded administrator is `demo.user@antigravitybank.com` with password
+`Admin@123`. Change or remove this demo account before a public deployment. The `/api/auth/demo-login`
+endpoint remains available for automated local smoke tests and returns the admin demo session.
+
+For a public deployment, replace local email/password auth with Supabase Auth sign-in and send the
+resulting access token to the backend. Keep `SUPABASE_JWT_SECRET` configured on Render so real
+tokens are verified.

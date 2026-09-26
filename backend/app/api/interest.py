@@ -16,7 +16,7 @@ from backend.app.schemas.schemas import (
     DailyBreakdownResponse,
     MonthlySummaryResponse,
 )
-from backend.app.services.auth_service import get_current_user
+from backend.app.services.auth_service import get_current_user, require_admin
 from backend.app.services.interest_service import InterestService, get_quarter_dates
 
 router = APIRouter(prefix="/api/interest", tags=["Interest Calculation"])
@@ -103,7 +103,7 @@ def preview_quarterly_interest(
 @router.post("/post", response_model=InterestPostResponse, status_code=status.HTTP_201_CREATED)
 def post_interest(
     payload: InterestPostQuarterRequest,
-    current_user: Profile = Depends(get_current_user),
+    current_user: Profile = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     posting = InterestService.post_quarterly_interest(

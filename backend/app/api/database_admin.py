@@ -28,7 +28,7 @@ from backend.app.models.models import (
     InterestPosting,
     InterestSlab,
 )
-from backend.app.services.auth_service import get_current_user, DEMO_USER_ID
+from backend.app.services.auth_service import require_admin, DEMO_USER_ID
 
 router = APIRouter(prefix="/api/database", tags=["Database Management"])
 
@@ -81,7 +81,7 @@ def _purge_account_children(db: Session, account_ids: list[str]) -> dict:
 @router.delete("/accounts/{account_id}/clear-transactions")
 def clear_account_transactions(
     account_id: str,
-    current_user: Profile = Depends(get_current_user),
+    current_user: Profile = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """
@@ -103,7 +103,7 @@ def clear_account_transactions(
 
 @router.delete("/purge-static")
 def purge_static_data(
-    current_user: Profile = Depends(get_current_user),
+    current_user: Profile = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """
@@ -147,7 +147,7 @@ def purge_static_data(
 
 @router.delete("/purge-all")
 def purge_all_data(
-    current_user: Profile = Depends(get_current_user),
+    current_user: Profile = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """
@@ -180,7 +180,7 @@ def purge_all_data(
 
 @router.post("/seed-sample")
 def seed_sample_data(
-    current_user: Profile = Depends(get_current_user),
+    current_user: Profile = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """

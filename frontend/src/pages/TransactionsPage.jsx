@@ -22,6 +22,8 @@ export const TransactionsPage = ({
   isAddModalOpen,
   onCloseAddModal,
   onOpenAddModal,
+  isAdmin,
+  refreshSignal,
 }) => {
   const { addToast } = useToast();
   const [transactions, setTransactions] = useState([]);
@@ -70,7 +72,7 @@ export const TransactionsPage = ({
 
   useEffect(() => {
     fetchTransactions();
-  }, [account.id, page, typeFilter, startDate, endDate]);
+  }, [account.id, page, typeFilter, startDate, endDate, refreshSignal]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -182,13 +184,13 @@ export const TransactionsPage = ({
         </div>
 
         <div className="flex items-center space-x-3">
-          <button
+          {isAdmin && <button
             onClick={fetchTransactions}
             className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors"
             title="Refresh"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
+          </button>}
           <button
             onClick={handleOpenAdd}
             className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs shadow-glow transition-all active:scale-95"
@@ -339,20 +341,20 @@ export const TransactionsPage = ({
                       </td>
                       <td className="py-3.5 px-4 text-center">
                         <div className="flex items-center justify-center space-x-2">
-                          <button
+                          {isAdmin && <button
                             onClick={() => handleOpenEdit(tx)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-sky-400 hover:bg-slate-800 transition-colors"
                             title="Edit Transaction"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
+                          </button>}
+                          {isAdmin && <button
                             onClick={() => handleDelete(tx)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
                             title="Delete Transaction"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          </button>}
                         </div>
                       </td>
                     </tr>

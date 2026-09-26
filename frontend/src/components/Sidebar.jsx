@@ -11,7 +11,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 
-export const Sidebar = ({ currentTab, onSelectTab, isOpen, onClose }) => {
+export const Sidebar = ({ currentTab, onSelectTab, isOpen, onClose, user }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, badge: null },
     { id: 'accounts', label: 'Accounts', icon: Wallet, badge: null },
@@ -63,7 +63,7 @@ export const Sidebar = ({ currentTab, onSelectTab, isOpen, onClose }) => {
             Banking Engine
           </div>
 
-          {menuItems.map((item) => {
+          {menuItems.filter((item) => user?.role === 'ADMIN' || !['quarterly', 'csv-import', 'slabs', 'settings'].includes(item.id)).map((item) => {
             const Icon = item.icon;
             const active = currentTab === item.id;
             return (

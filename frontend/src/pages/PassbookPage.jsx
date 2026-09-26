@@ -13,7 +13,7 @@ import { api } from '../services/api';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { useToast } from '../components/Toast';
 
-export const PassbookPage = ({ account }) => {
+export const PassbookPage = ({ account, refreshSignal }) => {
   const { addToast } = useToast();
 
   const [startDate, setStartDate] = useState('');
@@ -35,7 +35,7 @@ export const PassbookPage = ({ account }) => {
 
   useEffect(() => {
     fetchStatement();
-  }, [account.id, startDate, endDate]);
+  }, [account.id, startDate, endDate, refreshSignal]);
 
   const handleDownloadCsv = () => {
     const url = api.getStatementCsvDownloadUrl(account.id, startDate || undefined, endDate || undefined);

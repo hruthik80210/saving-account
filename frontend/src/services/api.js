@@ -2,12 +2,17 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 class ApiService {
   constructor() {
-    this.token = localStorage.getItem('auth_token') || 'demo-token';
+    this.token = localStorage.getItem('auth_token');
   }
 
   setToken(token) {
     this.token = token;
     localStorage.setItem('auth_token', token);
+  }
+
+  clearToken() {
+    this.token = null;
+    localStorage.removeItem('auth_token');
   }
 
   getToken() {
@@ -53,6 +58,26 @@ class ApiService {
     const data = await this.request('/api/auth/demo-login', { method: 'POST' });
     this.setToken(data.access_token);
     return data;
+  }
+
+  async login(payload) {
+    const data = await this.request('/api/auth/login', { method: 'POST', body: JSON.stringify(payload) });
+    this.setToken(data.access_token);
+    return data;
+  }
+
+  async register(payload) {
+    const data = await this.request('/api/auth/register', { method: 'POST', body: JSON.stringify(payload) });
+    this.setToken(data.access_token);
+    return data;
+  }
+
+  async logout() {
+    try {
+      await this.request('/api/auth/logout', { method: 'POST' });
+    } finally {
+      this.clearToken();
+    }
   }
 
   async getProfile() {

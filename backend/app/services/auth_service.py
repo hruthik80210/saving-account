@@ -3,6 +3,10 @@ Authentication Service.
 Handles Supabase Auth JWT verification with fallback for demo/local developer testing.
 """
 from typing import Optional
+import base64
+import hashlib
+import hmac
+import os
 from fastapi import HTTPException, Security, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
@@ -17,6 +21,34 @@ security = HTTPBearer(auto_error=False)
 DEMO_USER_ID = "00000000-0000-0000-0000-000000000001"
 DEMO_USER_EMAIL = "demo.user@antigravitybank.com"
 DEMO_USER_NAME = "Rajesh Sharma"
+LOCAL_JWT_SECRET = "local-development-auth-secret-change-in-production"
+
+
+def hash_password(password: str) -> str:
+    salt = os.urandom(16)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 120_000)
+    return f"pbkdf2_sha256$120000${base64.urlsafe_b64encode(salt).decode()}${base64.urlsafe_b64encode(digest).decode()}"
+
+
+def verify_password(password: str, encoded: str) -> bool:
+    try:
+        algorithm, iterations, salt, expected = encoded.split("$", 3)
+        if algorithm != "pbkdf2_sha256":
+            return False
+        actual = hashlib.pbkdf2_hmac(
+            "sha256", password.encode(), base64.urlsafe_b64decode(salt), int(iterations)
+        )
+        return hmac.compare_digest(base64.urlsafe_b64encode(actual).decode(), expected)
+    except (ValueError, TypeError):
+        return False
+
+
+def create_local_token(user: Profile) -> str:
+    return jwt.encode(
+        {"sub": str(user.id), "email": user.email, "role": user.role},
+        settings.SUPABASE_JWT_SECRET or LOCAL_JWT_SECRET,
+        algorithm="HS256",
+    )
 
 
 def get_or_create_demo_user(db: Session) -> Profile:
@@ -26,7 +58,8 @@ def get_or_create_demo_user(db: Session) -> Profile:
         user = Profile(
             id=DEMO_USER_ID,
             full_name=DEMO_USER_NAME,
-            email=DEMO_USER_EMAIL
+            email=DEMO_USER_EMAIL,
+            role="ADMIN",
         )
         db.add(user)
         db.commit()
@@ -89,3 +122,9 @@ def get_current_user(
         return user
     except Exception:
         return get_or_create_demo_user(db)
+
+
+def require_admin(current_user: Profile = Depends(get_current_user)) -> Profile:
+    if current_user.role != "ADMIN":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Administrator access required.")
+    return current_user

@@ -31,8 +31,10 @@ import { useToast } from '../components/Toast';
 export const DashboardPage = ({
   account,
   onOpenAddTx,
+  isAdmin,
   onNavigateToCalculator,
   onNavigateToQuarterly,
+  refreshSignal,
 }) => {
   const { addToast } = useToast();
   const [summary, setSummary] = useState(null);
@@ -75,7 +77,7 @@ export const DashboardPage = ({
 
   useEffect(() => {
     fetchDashboardData();
-  }, [account.id]);
+  }, [account.id, refreshSignal]);
 
   // Prepare chart data: downsample daily points for smooth area chart if many points
   const chartData = (calcResult?.daily_breakdown || []).map((d) => ({
@@ -112,13 +114,13 @@ export const DashboardPage = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button
+            {isAdmin && <button
               onClick={onOpenAddTx}
               className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs shadow-glow transition-all active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span>Record Transaction</span>
-            </button>
+            </button>}
             <button
               onClick={onNavigateToCalculator}
               className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-white font-semibold text-xs border border-slate-700 transition-all"

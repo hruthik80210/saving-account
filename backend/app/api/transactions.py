@@ -14,7 +14,7 @@ from backend.app.schemas.schemas import (
     TransactionUpdate,
     TransactionResponse,
 )
-from backend.app.services.auth_service import get_current_user
+from backend.app.services.auth_service import get_current_user, require_admin
 from backend.app.services.transaction_service import TransactionService
 
 router = APIRouter(prefix="/api", tags=["Transactions"])
@@ -23,7 +23,7 @@ router = APIRouter(prefix="/api", tags=["Transactions"])
 @router.post("/transactions", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
 def create_transaction(
     payload: TransactionCreate,
-    current_user: Profile = Depends(get_current_user),
+    current_user: Profile = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     created = TransactionService.create_transaction(db, payload)
@@ -104,7 +104,7 @@ def get_transactions(
 def update_transaction(
     transaction_id: str,
     payload: TransactionUpdate,
-    current_user: Profile = Depends(get_current_user),
+    current_user: Profile = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     updated = TransactionService.update_transaction(db, transaction_id, payload)

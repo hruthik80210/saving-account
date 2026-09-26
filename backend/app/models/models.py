@@ -30,6 +30,8 @@ class Profile(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     full_name = Column(String(255), nullable=False)
     email = Column(String(255), nullable=False, unique=True)
+    password_hash = Column(String(255), nullable=True)
+    role = Column(String(20), nullable=False, default="CUSTOMER")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 

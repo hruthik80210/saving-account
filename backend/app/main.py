@@ -6,10 +6,12 @@ from datetime import date
 from decimal import Decimal
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import inspect, text
 
 from backend.app.config import settings
 from backend.app.database import engine, Base, SessionLocal
 from backend.app.models.models import Profile, Account, InterestSlab, Transaction
+from backend.app.services.auth_service import hash_password
 from backend.app.api import (
     auth,
     accounts,
@@ -30,6 +32,14 @@ def init_db_and_seed():
     create yourself are kept.
     """
     Base.metadata.create_all(bind=engine)
+
+    # create_all does not add columns to an existing local SQLite database.
+    profile_columns = {column["name"] for column in inspect(engine).get_columns("profiles")}
+    with engine.begin() as connection:
+        if "password_hash" not in profile_columns:
+            connection.execute(text("ALTER TABLE profiles ADD COLUMN password_hash VARCHAR(255)"))
+        if "role" not in profile_columns:
+            connection.execute(text("ALTER TABLE profiles ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'CUSTOMER'"))
 
     if not settings.AUTO_SEED_DEMO_DATA:
         return
@@ -79,11 +89,17 @@ def init_db_and_seed():
             demo_user = Profile(
                 id="00000000-0000-0000-0000-000000000001",
                 full_name="Rajesh Sharma",
-                email="demo.user@antigravitybank.com"
+                email="demo.user@antigravitybank.com",
+                role="ADMIN",
+                password_hash=hash_password("Admin@123"),
             )
             db.add(demo_user)
             db.commit()
             db.refresh(demo_user)
+        elif demo_user.role != "ADMIN" or not demo_user.password_hash:
+            demo_user.role = "ADMIN"
+            demo_user.password_hash = demo_user.password_hash or hash_password("Admin@123")
+            db.commit()
 
         # 3. Seed Demo Account
         demo_account = db.query(Account).filter(Account.id == "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa").first()

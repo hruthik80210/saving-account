@@ -14,6 +14,7 @@ import { PassbookPage } from './pages/PassbookPage';
 import { CSVImportPage } from './pages/CSVImportPage';
 import { InterestSlabsPage } from './pages/InterestSlabsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AuthPage } from './pages/AuthPage';
 
 const AppContent = () => {
   const { addToast } = useToast();
@@ -26,6 +27,7 @@ const AppContent = () => {
   const [accounts, setAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [loadingInitial, setLoadingInitial] = useState(true);
+  const [syncRevision, setSyncRevision] = useState(0);
 
   // Modals triggered globally
   const [isAddTxModalOpen, setIsAddTxModalOpen] = useState(false);
@@ -34,9 +36,12 @@ const AppContent = () => {
   const initApp = async () => {
     try {
       setLoadingInitial(true);
-      // Auto login with demo profile for seamless experience
-      const authData = await api.demoLogin();
-      setUser(authData.user);
+      if (!api.getToken()) {
+        setLoadingInitial(false);
+        return;
+      }
+      const profile = await api.getProfile();
+      setUser(profile);
 
       // Fetch accounts
       const accs = await api.getAccounts();
@@ -54,6 +59,25 @@ const AppContent = () => {
   useEffect(() => {
     initApp();
   }, []);
+
+  useEffect(() => {
+    if (!user) return undefined;
+    const syncTimer = window.setInterval(async () => {
+      try {
+        const accs = await api.getAccounts();
+        setAccounts(accs);
+        setSelectedAccount((current) => current ? accs.find((acc) => acc.id === current.id) || accs[0] || null : accs[0] || null);
+        setSyncRevision((revision) => revision + 1);
+      } catch {
+        // A transient sync failure should not interrupt the active session.
+      }
+    }, 3000);
+    return () => window.clearInterval(syncTimer);
+  }, [user]);
+
+  if (!user && !loadingInitial) {
+    return <AuthPage onAuthenticated={(authenticatedUser) => { setUser(authenticatedUser); refreshAccounts(); }} />;
+  }
 
   const refreshAccounts = async () => {
     try {
@@ -90,6 +114,7 @@ const AppContent = () => {
         onSelectTab={(tab) => setCurrentTab(tab)}
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
+        user={user}
       />
 
       {/* Main Content Area */}
@@ -106,6 +131,7 @@ const AppContent = () => {
             setIsAddTxModalOpen(true);
           }}
           onCreateAccount={() => setIsCreateAccountModalOpen(true)}
+          onLogout={async () => { await api.logout(); setUser(null); setAccounts([]); setSelectedAccount(null); }}
         />
 
         {/* Page Content */}
@@ -121,6 +147,8 @@ const AppContent = () => {
                   }}
                   onNavigateToCalculator={() => setCurrentTab('calculator')}
                   onNavigateToQuarterly={() => setCurrentTab('quarterly')}
+                  isAdmin={user?.role === 'ADMIN'}
+                  refreshSignal={syncRevision}
                 />
               )}
 
@@ -143,6 +171,8 @@ const AppContent = () => {
                   isAddModalOpen={isAddTxModalOpen}
                   onCloseAddModal={() => setIsAddTxModalOpen(false)}
                   onOpenAddModal={() => setIsAddTxModalOpen(true)}
+                  isAdmin={user?.role === 'ADMIN'}
+                  refreshSignal={syncRevision}
                 />
               )}
 
@@ -158,7 +188,7 @@ const AppContent = () => {
               )}
 
               {currentTab === 'passbook' && (
-                <PassbookPage account={selectedAccount} />
+                <PassbookPage account={selectedAccount} refreshSignal={syncRevision} />
               )}
 
               {currentTab === 'csv-import' && (
@@ -184,7 +214,7 @@ const AppContent = () => {
           ) : (
             <div className="p-12 text-center text-slate-400 space-y-4">
               <p>No account found. Please open a savings account to begin.</p>
-              <button
+                  {user?.role === 'ADMIN' && <button
                 onClick={() => {
                   setIsCreateAccountModalOpen(true);
                   setCurrentTab('accounts');
@@ -192,7 +222,7 @@ const AppContent = () => {
                 className="px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs shadow-glow transition-all"
               >
                 Open New Savings Account
-              </button>
+                  </button>}
             </div>
           )}
         </main>
