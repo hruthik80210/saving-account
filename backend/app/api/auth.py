@@ -1,6 +1,8 @@
 """
 Authentication API endpoints.
 """
+import secrets
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -11,7 +13,7 @@ from backend.app.services.auth_service import (
     hash_password, verify_password, create_local_token,
     supabase_password_login, supabase_create_user,
 )
-from backend.app.models.models import Profile
+from backend.app.models.models import Account, Profile
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
@@ -42,13 +44,20 @@ def demo_login(db: Session = Depends(get_db)):
 @router.post("/register", response_model=dict, status_code=status.HTTP_201_CREATED)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     email = payload.email.strip().lower()
-    if db.query(Profile).filter(Profile.email == email).first():
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email is already registered.")
     full_name = payload.full_name.strip()
     try:
         supabase_user = supabase_create_user(email, payload.password, full_name)
     except ValueError as error:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error))
+
+    existing_profile = db.query(Profile).filter(Profile.email == email).first()
+    if existing_profile:
+        if not supabase_user:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email is already registered.")
+        # Supabase Auth accepted the new user, so this is an orphaned profile
+        # left behind by an earlier Auth deletion. Remove its dependent data.
+        db.delete(existing_profile)
+        db.commit()
 
     user = Profile(
         id=supabase_user.get("id") or None,
@@ -60,7 +69,16 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
-    return {"access_token": create_local_token(user), "token_type": "bearer", "user": {"id": user.id, "full_name": user.full_name, "email": user.email, "role": user.role}}
+
+    account_number = None
+    while not account_number or db.query(Account).filter(Account.account_number == account_number).first():
+        account_number = f"SB-{secrets.randbelow(90000000000) + 10000000000}"
+    account = Account(user_id=user.id, account_number=account_number, account_type="SAVINGS", currency="INR", status="ACTIVE")
+    db.add(account)
+    db.commit()
+
+    access_token = supabase_user.get("access_token") or create_local_token(user)
+    return {"access_token": access_token, "token_type": "bearer", "user": {"id": user.id, "full_name": user.full_name, "email": user.email, "role": user.role}, "account": {"id": account.id, "account_number": account.account_number}}
 
 
 @router.post("/login", response_model=dict)
