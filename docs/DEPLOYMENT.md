@@ -201,7 +201,9 @@ Use these settings:
 | Build command | `pip install -r backend/requirements.txt` |
 | Start command | `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT` |
 | Health check path | `/api/health` |
-
+Root Directory: blank
+Build Command: pip install -r backend/requirements.txt
+Start Command: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
 Do not set the root directory to `backend`. The application imports `backend.app...` and must start from the repository root.
 
 Add these Render environment variables:
