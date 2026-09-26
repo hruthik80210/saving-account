@@ -15,6 +15,7 @@ from sqlalchemy import (
     Index,
     Text,
     Integer,
+    Uuid,
 )
 from sqlalchemy.orm import relationship
 from backend.app.database import Base
@@ -27,7 +28,7 @@ def generate_uuid() -> str:
 class Profile(Base):
     __tablename__ = "profiles"
 
-    id = Column(String(36), primary_key=True, default=generate_uuid)
+    id = Column(Uuid(as_uuid=False), primary_key=True, default=generate_uuid)
     full_name = Column(String(255), nullable=False)
     email = Column(String(255), nullable=False, unique=True)
     password_hash = Column(String(255), nullable=True)
@@ -41,8 +42,8 @@ class Profile(Base):
 class Account(Base):
     __tablename__ = "accounts"
 
-    id = Column(String(36), primary_key=True, default=generate_uuid)
-    user_id = Column(String(36), ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False, index=True)
+    id = Column(Uuid(as_uuid=False), primary_key=True, default=generate_uuid)
+    user_id = Column(Uuid(as_uuid=False), ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False, index=True)
     account_number = Column(String(50), nullable=False, unique=True, index=True)
     account_type = Column(String(50), nullable=False, default="SAVINGS")
     currency = Column(String(10), nullable=False, default="INR")
@@ -59,8 +60,8 @@ class Account(Base):
 class Transaction(Base):
     __tablename__ = "transactions"
 
-    id = Column(String(36), primary_key=True, default=generate_uuid)
-    account_id = Column(String(36), ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False, index=True)
+    id = Column(Uuid(as_uuid=False), primary_key=True, default=generate_uuid)
+    account_id = Column(Uuid(as_uuid=False), ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False, index=True)
     transaction_date = Column(Date, nullable=False, index=True)
     value_date = Column(Date, nullable=False, index=True)
     transaction_type = Column(String(50), nullable=False)  # OPENING_BALANCE, DEPOSIT, WITHDRAWAL, INTEREST_CREDIT, ADJUSTMENT
@@ -76,7 +77,7 @@ class Transaction(Base):
 class InterestSlab(Base):
     __tablename__ = "interest_slabs"
 
-    id = Column(String(36), primary_key=True, default=generate_uuid)
+    id = Column(Uuid(as_uuid=False), primary_key=True, default=generate_uuid)
     min_balance = Column(Numeric(15, 2), nullable=False, default=Decimal("0.00"))
     max_balance = Column(Numeric(15, 2), nullable=True)  # NULL indicates no upper limit
     annual_rate = Column(Numeric(6, 4), nullable=False)  # Stored as percentage, e.g. 3.50 for 3.50%
@@ -91,8 +92,8 @@ class InterestSlab(Base):
 class InterestCalculation(Base):
     __tablename__ = "interest_calculations"
 
-    id = Column(String(36), primary_key=True, default=generate_uuid)
-    account_id = Column(String(36), ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False, index=True)
+    id = Column(Uuid(as_uuid=False), primary_key=True, default=generate_uuid)
+    account_id = Column(Uuid(as_uuid=False), ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False, index=True)
     period_start = Column(Date, nullable=False)
     period_end = Column(Date, nullable=False)
     day_count_convention = Column(String(30), nullable=False, default="ACTUAL_365")
@@ -109,8 +110,8 @@ class InterestCalculation(Base):
 class InterestDailyBreakdown(Base):
     __tablename__ = "interest_daily_breakdown"
 
-    id = Column(String(36), primary_key=True, default=generate_uuid)
-    calculation_id = Column(String(36), ForeignKey("interest_calculations.id", ondelete="CASCADE"), nullable=False, index=True)
+    id = Column(Uuid(as_uuid=False), primary_key=True, default=generate_uuid)
+    calculation_id = Column(Uuid(as_uuid=False), ForeignKey("interest_calculations.id", ondelete="CASCADE"), nullable=False, index=True)
     calculation_date = Column(Date, nullable=False, index=True)
     opening_balance = Column(Numeric(15, 2), nullable=False)
     transactions_total = Column(Numeric(15, 2), nullable=False, default=Decimal("0.00"))
@@ -125,10 +126,10 @@ class InterestDailyBreakdown(Base):
 class InterestPosting(Base):
     __tablename__ = "interest_postings"
 
-    id = Column(String(36), primary_key=True, default=generate_uuid)
-    account_id = Column(String(36), ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False, index=True)
-    calculation_id = Column(String(36), ForeignKey("interest_calculations.id", ondelete="CASCADE"), nullable=False)
-    transaction_id = Column(String(36), ForeignKey("transactions.id", ondelete="CASCADE"), nullable=False)
+    id = Column(Uuid(as_uuid=False), primary_key=True, default=generate_uuid)
+    account_id = Column(Uuid(as_uuid=False), ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False, index=True)
+    calculation_id = Column(Uuid(as_uuid=False), ForeignKey("interest_calculations.id", ondelete="CASCADE"), nullable=False)
+    transaction_id = Column(Uuid(as_uuid=False), ForeignKey("transactions.id", ondelete="CASCADE"), nullable=False)
     period_quarter = Column(String(10), nullable=False)  # Q1, Q2, Q3, Q4
     period_year = Column(Integer, nullable=False)
     posted_at = Column(DateTime, default=datetime.utcnow, nullable=False)
