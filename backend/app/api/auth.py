@@ -9,6 +9,7 @@ from backend.app.schemas.schemas import ProfileResponse, RegisterRequest, LoginR
 from backend.app.services.auth_service import (
     get_current_user, get_or_create_demo_user, DEMO_USER_ID,
     hash_password, verify_password, create_local_token,
+    supabase_password_login, supabase_create_user,
 )
 from backend.app.models.models import Profile
 
@@ -43,7 +44,19 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     email = payload.email.strip().lower()
     if db.query(Profile).filter(Profile.email == email).first():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email is already registered.")
-    user = Profile(full_name=payload.full_name.strip(), email=email, password_hash=hash_password(payload.password), role="CUSTOMER")
+    full_name = payload.full_name.strip()
+    try:
+        supabase_user = supabase_create_user(email, payload.password, full_name)
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error))
+
+    user = Profile(
+        id=supabase_user.get("id") or None,
+        full_name=full_name,
+        email=email,
+        password_hash=hash_password(payload.password),
+        role="CUSTOMER",
+    )
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -52,7 +65,27 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=dict)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(Profile).filter(Profile.email == payload.email.strip().lower()).first()
+    email = payload.email.strip().lower()
+    user = db.query(Profile).filter(Profile.email == email).first()
+
+    supabase_session = supabase_password_login(email, payload.password)
+    if supabase_session:
+        auth_user = supabase_session.get("user") or {}
+        user_id = auth_user.get("id")
+        if not user and user_id:
+            metadata = auth_user.get("user_metadata") or {}
+            user = Profile(
+                id=user_id,
+                full_name=metadata.get("full_name", email.split("@")[0]),
+                email=email,
+                role="CUSTOMER",
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        if user:
+            return {"access_token": supabase_session["access_token"], "token_type": "bearer", "user": {"id": user.id, "full_name": user.full_name, "email": user.email, "role": user.role}}
+
     if not user or not user.password_hash or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password.")
     return {"access_token": create_local_token(user), "token_type": "bearer", "user": {"id": user.id, "full_name": user.full_name, "email": user.email, "role": user.role}}

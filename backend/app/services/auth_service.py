@@ -7,6 +7,7 @@ import base64
 import hashlib
 import hmac
 import os
+import httpx
 from fastapi import HTTPException, Security, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
@@ -49,6 +50,47 @@ def create_local_token(user: Profile) -> str:
         settings.SUPABASE_JWT_SECRET or LOCAL_JWT_SECRET,
         algorithm="HS256",
     )
+
+
+def supabase_auth_headers() -> dict[str, str]:
+    key = settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY
+    return {"apikey": key or "", "Authorization": f"Bearer {key or ''}", "Content-Type": "application/json"}
+
+
+def supabase_password_login(email: str, password: str) -> dict:
+    if not settings.SUPABASE_URL or not settings.SUPABASE_ANON_KEY:
+        return {}
+    response = httpx.post(
+        f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1/token?grant_type=password",
+        headers={"apikey": settings.SUPABASE_ANON_KEY, "Content-Type": "application/json"},
+        json={"email": email, "password": password},
+        timeout=10,
+    )
+    if response.status_code == 400:
+        return {}
+    response.raise_for_status()
+    return response.json()
+
+
+def supabase_create_user(email: str, password: str, full_name: str) -> dict:
+    if not settings.SUPABASE_URL or not settings.SUPABASE_SERVICE_ROLE_KEY:
+        return {}
+    response = httpx.post(
+        f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1/admin/users",
+        headers=supabase_auth_headers(),
+        json={
+            "email": email,
+            "password": password,
+            "email_confirm": True,
+            "user_metadata": {"full_name": full_name},
+        },
+        timeout=10,
+    )
+    if response.status_code in (400, 422):
+        detail = response.json().get("msg") or response.json().get("message") or "Email is already registered."
+        raise ValueError(detail)
+    response.raise_for_status()
+    return response.json()
 
 
 def get_or_create_demo_user(db: Session) -> Profile:
