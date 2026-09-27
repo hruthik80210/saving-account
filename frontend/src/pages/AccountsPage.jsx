@@ -117,6 +117,7 @@ export const AccountsPage = ({
                   <div>
                     <h3 className="text-sm font-bold text-white">{acc.account_type}</h3>
                     <span className="text-[10px] text-slate-400">{acc.currency} • Active</span>
+                    {user?.role === 'ADMIN' && <span className="block text-[10px] text-sky-300 mt-0.5">{acc.owner_name || acc.owner_email || 'Owner unavailable'}</span>}
                   </div>
                 </div>
 

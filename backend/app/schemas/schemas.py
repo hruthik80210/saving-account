@@ -69,6 +69,8 @@ class AccountCreate(AccountBase):
 class AccountResponse(AccountBase):
     id: UUID
     user_id: UUID
+    owner_name: Optional[str] = None
+    owner_email: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

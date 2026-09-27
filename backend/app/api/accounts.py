@@ -28,7 +28,22 @@ def get_user_accounts(
     if current_user.role != "ADMIN":
         query = query.filter(Account.user_id == current_user.id)
     accounts = query.all()
-    return accounts
+    response = []
+    for account in accounts:
+        owner = db.query(Profile).filter(Profile.id == account.user_id).first()
+        response.append({
+            "id": account.id,
+            "user_id": account.user_id,
+            "account_number": account.account_number,
+            "account_type": account.account_type,
+            "currency": account.currency,
+            "status": account.status,
+            "owner_name": owner.full_name if owner else None,
+            "owner_email": owner.email if owner else None,
+            "created_at": account.created_at,
+            "updated_at": account.updated_at,
+        })
+    return response
 
 
 @router.post("", response_model=AccountResponse, status_code=status.HTTP_201_CREATED)

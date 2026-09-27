@@ -41,6 +41,7 @@ export const Navbar = ({
                 <span>{selectedAccount ? selectedAccount.account_number : 'No account'}</span>
                 <span className="text-[10px] text-sky-400 font-normal">({selectedAccount?.currency || 'INR'})</span>
               </div>
+              {user?.role === 'ADMIN' && selectedAccount?.owner_name && <div className="text-[10px] text-slate-400 truncate max-w-40">{selectedAccount.owner_name}</div>}
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors ml-1" />
           </button>
