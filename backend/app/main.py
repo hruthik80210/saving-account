@@ -184,9 +184,17 @@ app = FastAPI(
 )
 
 # CORS Middleware
+cors_origins = [
+    origin for origin in settings.CORS_ORIGINS
+    if origin != "*"
+]
+if "https://saving-account-three.vercel.app" not in cors_origins:
+    cors_origins.append("https://saving-account-three.vercel.app")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=cors_origins,
+    allow_origin_regex=r"^https://saving-account(?:-[a-z0-9-]+)?\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
