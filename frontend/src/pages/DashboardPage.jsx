@@ -42,9 +42,9 @@ export const DashboardPage = ({
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (includeCalculation = false) => {
     try {
-      setLoading(true);
+      if (includeCalculation) setLoading(true);
       const [sumData, txData] = await Promise.all([
         api.getAccountSummary(account.id),
         api.getTransactions(account.id, { limit: 8 }),
@@ -52,7 +52,10 @@ export const DashboardPage = ({
       setSummary(sumData);
       setRecentTransactions(txData.data);
 
-      // Fetch 90-day calculation trend for charts
+      if (!includeCalculation) return;
+
+      // Calculate the chart trend only on initial account load. Realtime updates
+      // refresh balances and transactions without repeating this expensive job.
       const now = new Date();
       const currentYear = now.getFullYear();
       const startDate = `${currentYear}-01-01`;
@@ -71,13 +74,17 @@ export const DashboardPage = ({
     } catch (err) {
       addToast('error', 'Failed to load dashboard data', err.message);
     } finally {
-      setLoading(false);
+      if (includeCalculation) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [account.id, refreshSignal]);
+    fetchDashboardData(true);
+  }, [account.id]);
+
+  useEffect(() => {
+    if (refreshSignal > 0) fetchDashboardData(false);
+  }, [refreshSignal]);
 
   // Prepare chart data: downsample daily points for smooth area chart if many points
   const chartData = (calcResult?.daily_breakdown || []).map((d) => ({

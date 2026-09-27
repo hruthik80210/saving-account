@@ -73,7 +73,7 @@ const AppContent = () => {
       } catch {
         // A transient sync failure should not interrupt the active session.
       }
-    }, 3000);
+    }, 30000);
     return () => window.clearInterval(syncTimer);
   }, [user]);
 

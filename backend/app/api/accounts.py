@@ -5,7 +5,7 @@ from typing import List
 from datetime import date
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from backend.app.database import get_db
 from backend.app.models.models import Account, Profile, Transaction
@@ -24,13 +24,13 @@ def get_user_accounts(
     current_user: Profile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    query = db.query(Account)
+    query = db.query(Account).options(joinedload(Account.user))
     if current_user.role != "ADMIN":
         query = query.filter(Account.user_id == current_user.id)
     accounts = query.all()
     response = []
     for account in accounts:
-        owner = db.query(Profile).filter(Profile.id == account.user_id).first()
+        owner = account.user
         response.append({
             "id": account.id,
             "user_id": account.user_id,
