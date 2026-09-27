@@ -52,7 +52,10 @@ export const DashboardPage = ({
       setSummary(sumData);
       setRecentTransactions(txData.data);
 
-      if (!includeCalculation) return;
+      if (!includeCalculation || txData.total === 0) {
+        setCalcResult(null);
+        return;
+      }
 
       // Calculate the chart trend only on initial account load. Realtime updates
       // refresh balances and transactions without repeating this expensive job.

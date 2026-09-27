@@ -29,8 +29,13 @@ export const InterestCalculatorPage = ({ account }) => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedDayItem, setSelectedDayItem] = useState(null);
+  const [hasTransactions, setHasTransactions] = useState(true);
 
   const runCalculation = async (start = startDate, end = endDate, convention = dayCountConvention) => {
+    if (!hasTransactions) {
+      addToast('info', 'No transactions yet', 'Add or import a transaction before calculating interest.');
+      return;
+    }
     try {
       setLoading(true);
       const res = await api.calculateInterest({
@@ -50,7 +55,13 @@ export const InterestCalculatorPage = ({ account }) => {
   };
 
   useEffect(() => {
-    runCalculation();
+    api.getTransactions(account.id, { limit: 1 })
+      .then((transactions) => {
+        const available = transactions.total > 0;
+        setHasTransactions(available);
+        if (available) runCalculation();
+      })
+      .catch((err) => addToast('error', 'Account data unavailable', err.message));
   }, [account.id]);
 
   // Quick Preset Handlers
