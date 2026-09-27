@@ -72,6 +72,22 @@ def supabase_password_login(email: str, password: str) -> dict:
     return response.json()
 
 
+def supabase_get_user(access_token: str) -> dict:
+    if not settings.SUPABASE_URL or not settings.SUPABASE_ANON_KEY:
+        return {}
+    response = httpx.get(
+        f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1/user",
+        headers={
+            "apikey": settings.SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {access_token}",
+        },
+        timeout=10,
+    )
+    if response.status_code != 200:
+        return {}
+    return response.json()
+
+
 def supabase_create_user(email: str, password: str, full_name: str) -> dict:
     if not settings.SUPABASE_URL or not settings.SUPABASE_SERVICE_ROLE_KEY:
         return {}
@@ -181,9 +197,25 @@ def get_current_user(
                 db.commit()
                 db.refresh(user)
             return user
-        except jwt.PyJWTError as e:
-            # If token verification fails, return 401
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"JWT verification failed: {str(e)}")
+        except jwt.PyJWTError as error:
+            # Supabase validates its own signing-key rotation through this endpoint.
+            auth_user = supabase_get_user(token)
+            user_id = auth_user.get("id")
+            if user_id:
+                user = db.query(Profile).filter(Profile.id == user_id).first()
+                if not user:
+                    metadata = auth_user.get("user_metadata") or {}
+                    user = Profile(
+                        id=user_id,
+                        full_name=metadata.get("full_name", auth_user.get("email", "Supabase User").split("@")[0]),
+                        email=auth_user.get("email", f"{user_id}@supabase.user"),
+                        role="CUSTOMER",
+                    )
+                    db.add(user)
+                    db.commit()
+                    db.refresh(user)
+                return user
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"JWT verification failed: {str(error)}")
 
     # If no secret configured but a token is passed, allow unverified sub extraction or demo
     try:
