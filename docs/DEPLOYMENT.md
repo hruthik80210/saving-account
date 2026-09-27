@@ -35,6 +35,7 @@ cp .env.example .env
 | `ALLOW_NEGATIVE_BALANCE` | no | `false` by default. |
 | `AUTO_SEED_DEMO_DATA` | no | `true` locally; set `false` for an empty production database. |
 | `SEED_DEFAULT_SLABS` | no | Seed the three default slabs on startup. |
+| `ALLOW_DEMO_AUTH` | no | `true` for local tests; set `false` in production so deleted Supabase users cannot reappear through demo-token. |
 
 The frontend reads only build-time variables (put them in `frontend/.env`):
 

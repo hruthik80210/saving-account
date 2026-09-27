@@ -174,7 +174,14 @@ def get_current_user(
     Validates Supabase Bearer token or provides demo user if in local/demo mode.
     """
     # Demo/Local Mode fallback if no token or demo token provided
-    if not credentials or credentials.credentials in ("demo-token", "demo", "null", "undefined"):
+    if not credentials:
+        if settings.SUPABASE_URL and not settings.ALLOW_DEMO_AUTH:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+        return get_or_create_demo_user(db)
+
+    if credentials.credentials in ("demo-token", "demo", "null", "undefined"):
+        if settings.SUPABASE_URL and not settings.ALLOW_DEMO_AUTH:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Demo authentication is disabled in production.")
         return get_or_create_demo_user(db)
 
     token = credentials.credentials

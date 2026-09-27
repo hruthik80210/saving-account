@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     SUPABASE_ANON_KEY: Optional[str] = None
     SUPABASE_SERVICE_ROLE_KEY: Optional[str] = None
     SUPABASE_JWT_SECRET: Optional[str] = None
+    ALLOW_DEMO_AUTH: bool = True
 
     # Banking calculation defaults
     DEFAULT_DAY_COUNT_CONVENTION: str = "ACTUAL_365"

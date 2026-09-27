@@ -52,6 +52,8 @@ const AppContent = () => {
         setSelectedAccount(accs[0]);
       }
     } catch (err) {
+      api.clearToken();
+      setUser(null);
       addToast('error', 'Initialization error', err.message);
     } finally {
       setLoadingInitial(false);
