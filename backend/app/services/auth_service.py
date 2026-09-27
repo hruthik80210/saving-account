@@ -105,6 +105,35 @@ def supabase_delete_user(user_id: str) -> None:
         response.raise_for_status()
 
 
+def decode_supabase_token(token: str) -> dict:
+    header = jwt.get_unverified_header(token)
+    algorithm = header.get("alg")
+    if algorithm == "HS256" and settings.SUPABASE_JWT_SECRET:
+        return jwt.decode(
+            token,
+            settings.SUPABASE_JWT_SECRET,
+            algorithms=["HS256"],
+            options={"verify_aud": False},
+        )
+
+    if algorithm in ("RS256", "ES256") and settings.SUPABASE_URL:
+        jwks_client = jwt.PyJWKClient(
+            f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1/.well-known/jwks.json"
+        )
+        signing_key = jwks_client.get_signing_key_from_jwt(token)
+        return jwt.decode(
+            token,
+            signing_key.key,
+            algorithms=[algorithm],
+            options={"verify_aud": False},
+        )
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=f"Unsupported Supabase JWT algorithm: {algorithm or 'missing'}.",
+    )
+
+
 def get_or_create_demo_user(db: Session) -> Profile:
     """Ensures demo profile exists in the DB."""
     user = db.query(Profile).filter(Profile.id == DEMO_USER_ID).first()
@@ -137,12 +166,7 @@ def get_current_user(
     # If Supabase JWT Secret is configured, decode and verify JWT
     if settings.SUPABASE_JWT_SECRET:
         try:
-            payload = jwt.decode(
-                token,
-                settings.SUPABASE_JWT_SECRET,
-                algorithms=["HS256"],
-                options={"verify_aud": False}
-            )
+            payload = decode_supabase_token(token)
             user_id = payload.get("sub")
             if not user_id:
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload: missing sub")
