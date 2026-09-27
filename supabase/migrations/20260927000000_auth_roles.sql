@@ -43,4 +43,4 @@ ALTER TABLE public.profiles
 
 UPDATE public.profiles
 SET role = 'ADMIN'
-WHERE email = 'admin@bank.com';
+WHERE lower(email) IN ('admin@bank.com', 'demo.user@antigravitybank.com');

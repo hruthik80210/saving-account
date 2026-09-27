@@ -41,6 +41,17 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class CustomerCreateRequest(BaseModel):
+    full_name: str = Field(min_length=1, max_length=255)
+    email: str = Field(min_length=3, max_length=255)
+    password: str = Field(min_length=8, max_length=128)
+
+
+class CustomerUpdateRequest(BaseModel):
+    full_name: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    role: Optional[str] = None
+
+
 # ==============================================================================
 # Account Schemas
 # ==============================================================================

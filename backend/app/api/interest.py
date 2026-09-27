@@ -16,7 +16,7 @@ from backend.app.schemas.schemas import (
     DailyBreakdownResponse,
     MonthlySummaryResponse,
 )
-from backend.app.services.auth_service import get_current_user, require_admin
+from backend.app.services.auth_service import ensure_account_access, get_current_user, require_admin
 from backend.app.services.interest_service import InterestService, get_quarter_dates
 
 router = APIRouter(prefix="/api/interest", tags=["Interest Calculation"])
@@ -28,6 +28,7 @@ def calculate_interest(
     current_user: Profile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    ensure_account_access(db, payload.account_id, current_user)
     result = InterestService.run_calculation(
         db=db,
         account_id=payload.account_id,
@@ -90,6 +91,7 @@ def preview_quarterly_interest(
     current_user: Profile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    ensure_account_access(db, account_id, current_user)
     start_date, end_date = get_quarter_dates(year, quarter)
     req = InterestCalculateRequest(
         account_id=account_id,
@@ -106,6 +108,7 @@ def post_interest(
     current_user: Profile = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
+    ensure_account_access(db, payload.account_id, current_user)
     posting = InterestService.post_quarterly_interest(
         db=db,
         account_id=payload.account_id,
@@ -132,6 +135,7 @@ def get_account_postings(
     current_user: Profile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    ensure_account_access(db, account_id, current_user)
     postings = db.query(InterestPosting).filter(InterestPosting.account_id == account_id).order_by(InterestPosting.posted_at.desc()).all()
     return [
         {

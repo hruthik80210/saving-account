@@ -15,6 +15,7 @@ import { CSVImportPage } from './pages/CSVImportPage';
 import { InterestSlabsPage } from './pages/InterestSlabsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AuthPage } from './pages/AuthPage';
+import { CustomerManagementPage } from './pages/CustomerManagementPage';
 
 const AppContent = () => {
   const { addToast } = useToast();
@@ -136,7 +137,9 @@ const AppContent = () => {
 
         {/* Page Content */}
         <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto">
-          {selectedAccount ? (
+          {currentTab === 'customers' && user?.role === 'ADMIN' ? (
+            <CustomerManagementPage currentUser={user} />
+          ) : selectedAccount ? (
             <>
               {currentTab === 'dashboard' && (
                 <DashboardPage

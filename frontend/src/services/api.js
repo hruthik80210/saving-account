@@ -84,6 +84,34 @@ class ApiService {
     return this.request('/api/auth/me');
   }
 
+  async getCustomers() {
+    return this.request('/api/admin/customers');
+  }
+
+  async createCustomer(payload) {
+    return this.request('/api/admin/customers', { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  async updateCustomer(id, payload) {
+    return this.request(`/api/admin/customers/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+  }
+
+  async deleteCustomer(id) {
+    return this.request(`/api/admin/customers/${id}`, { method: 'DELETE' });
+  }
+
+  async createCustomerAccount(customerId, payload = {}) {
+    return this.request(`/api/admin/customers/${customerId}/accounts`, {
+      method: 'POST',
+      body: JSON.stringify({
+        account_number: payload.account_number || `SB-${Math.floor(10000000000 + Math.random() * 90000000000)}`,
+        account_type: payload.account_type || 'SAVINGS',
+        currency: payload.currency || 'INR',
+        status: 'ACTIVE',
+      }),
+    });
+  }
+
   // Accounts
   async getAccounts() {
     return this.request('/api/accounts');

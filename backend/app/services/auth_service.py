@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from backend.app.config import settings
 from backend.app.database import get_db
-from backend.app.models.models import Profile
+from backend.app.models.models import Account, Profile
 
 security = HTTPBearer(auto_error=False)
 
@@ -91,6 +91,18 @@ def supabase_create_user(email: str, password: str, full_name: str) -> dict:
         raise ValueError(detail)
     response.raise_for_status()
     return response.json()
+
+
+def supabase_delete_user(user_id: str) -> None:
+    if not settings.SUPABASE_URL or not settings.SUPABASE_SERVICE_ROLE_KEY:
+        return
+    response = httpx.delete(
+        f"{settings.SUPABASE_URL.rstrip('/')}/auth/v1/admin/users/{user_id}",
+        headers=supabase_auth_headers(),
+        timeout=10,
+    )
+    if response.status_code not in (200, 204, 404):
+        response.raise_for_status()
 
 
 def get_or_create_demo_user(db: Session) -> Profile:
@@ -170,3 +182,12 @@ def require_admin(current_user: Profile = Depends(get_current_user)) -> Profile:
     if current_user.role != "ADMIN":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Administrator access required.")
     return current_user
+
+
+def ensure_account_access(db: Session, account_id: str, current_user: Profile) -> Account:
+    account = db.query(Account).filter(Account.id == account_id).first()
+    if not account:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found.")
+    if current_user.role != "ADMIN" and str(account.user_id) != str(current_user.id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have access to this account.")
+    return account

@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from backend.app.database import get_db
 from backend.app.models.models import Account, Profile, Transaction
 from backend.app.schemas.schemas import AccountCreate, AccountResponse, AccountSummaryResponse
-from backend.app.services.auth_service import get_current_user, require_admin
+from backend.app.services.auth_service import ensure_account_access, get_current_user, require_admin
 from backend.app.services.transaction_service import to_engine_record
 from backend.app.interest_engine.engine import calculate_balance_on_date, InterestEngine
 from backend.app.services.interest_service import to_engine_slab
@@ -24,7 +24,10 @@ def get_user_accounts(
     current_user: Profile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    accounts = db.query(Account).filter(Account.user_id == current_user.id).all()
+    query = db.query(Account)
+    if current_user.role != "ADMIN":
+        query = query.filter(Account.user_id == current_user.id)
+    accounts = query.all()
     return accounts
 
 
@@ -54,24 +57,20 @@ def create_account(
 @router.get("/{account_id}", response_model=AccountResponse)
 def get_account_by_id(
     account_id: str,
-    current_user: Profile = Depends(get_current_user),
+    current_user: Profile = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    acc = db.query(Account).filter(Account.id == account_id).first()
-    if not acc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found.")
+    acc = ensure_account_access(db, account_id, current_user)
     return acc
 
 
 @router.delete("/{account_id}")
 def delete_account(
     account_id: str,
-    current_user: Profile = Depends(get_current_user),
+    current_user: Profile = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    acc = db.query(Account).filter(Account.id == account_id).first()
-    if not acc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found.")
+    acc = ensure_account_access(db, account_id, current_user)
 
     db.delete(acc)
     db.commit()

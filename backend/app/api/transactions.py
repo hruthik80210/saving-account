@@ -14,7 +14,7 @@ from backend.app.schemas.schemas import (
     TransactionUpdate,
     TransactionResponse,
 )
-from backend.app.services.auth_service import get_current_user, require_admin
+from backend.app.services.auth_service import ensure_account_access, get_current_user, require_admin
 from backend.app.services.transaction_service import TransactionService
 
 router = APIRouter(prefix="/api", tags=["Transactions"])
@@ -42,6 +42,7 @@ def get_transactions(
     current_user: Profile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    ensure_account_access(db, account_id, current_user)
     # Retrieve all matched transactions with chronological running balances
     all_acc_txs = TransactionService.get_account_transactions(
         db=db,

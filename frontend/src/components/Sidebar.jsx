@@ -9,6 +9,7 @@ import {
   Sliders,
   HelpCircle,
   ShieldCheck,
+  Users,
 } from 'lucide-react';
 
 export const Sidebar = ({ currentTab, onSelectTab, isOpen, onClose, user }) => {
@@ -22,6 +23,7 @@ export const Sidebar = ({ currentTab, onSelectTab, isOpen, onClose, user }) => {
     { id: 'csv-import', label: 'CSV Import', icon: FileSpreadsheet, badge: null },
     { id: 'slabs', label: 'Interest Slabs', icon: Sliders, badge: null },
     { id: 'settings', label: 'Formula & Docs', icon: HelpCircle, badge: null },
+    { id: 'customers', label: 'Customers', icon: Users, badge: 'Admin' },
   ];
 
   return (
@@ -63,7 +65,7 @@ export const Sidebar = ({ currentTab, onSelectTab, isOpen, onClose, user }) => {
             Banking Engine
           </div>
 
-          {menuItems.filter((item) => user?.role === 'ADMIN' || !['quarterly', 'csv-import', 'slabs', 'settings'].includes(item.id)).map((item) => {
+          {menuItems.filter((item) => user?.role === 'ADMIN' || !['quarterly', 'csv-import', 'slabs', 'settings', 'customers'].includes(item.id)).map((item) => {
             const Icon = item.icon;
             const active = currentTab === item.id;
             return (

@@ -21,6 +21,7 @@ from backend.app.api import (
     statement,
     csv_import,
     database_admin,
+    customers,
 )
 
 
@@ -200,6 +201,7 @@ app.include_router(slabs.router)
 app.include_router(statement.router)
 app.include_router(csv_import.router)
 app.include_router(database_admin.router)
+app.include_router(customers.router)
 
 
 @app.get("/api/health", tags=["Health"])
