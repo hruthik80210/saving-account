@@ -34,6 +34,9 @@ class ApiService {
     });
 
     if (!res.ok) {
+      if (res.status === 401) {
+        this.clearToken();
+      }
       let errorMsg = `Error ${res.status}: ${res.statusText}`;
       try {
         const errorJson = await res.json();
