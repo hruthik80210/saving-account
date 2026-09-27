@@ -16,6 +16,7 @@ import { InterestSlabsPage } from './pages/InterestSlabsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AuthPage } from './pages/AuthPage';
 import { CustomerManagementPage } from './pages/CustomerManagementPage';
+import { subscribeToAccountChanges } from './services/realtime';
 
 const AppContent = () => {
   const { addToast } = useToast();
@@ -75,6 +76,16 @@ const AppContent = () => {
     }, 3000);
     return () => window.clearInterval(syncTimer);
   }, [user]);
+
+  useEffect(() => {
+    if (!user || !selectedAccount || !api.getToken()) return undefined;
+    return subscribeToAccountChanges({
+      accessToken: api.getToken(),
+      accountId: selectedAccount.id,
+      userId: user.id,
+      onChange: () => setSyncRevision((revision) => revision + 1),
+    });
+  }, [user, selectedAccount]);
 
   if (!user && !loadingInitial) {
     return <AuthPage onAuthenticated={(authenticatedUser) => { setUser(authenticatedUser); refreshAccounts(); }} />;

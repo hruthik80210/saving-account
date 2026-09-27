@@ -77,7 +77,8 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     db.add(account)
     db.commit()
 
-    access_token = supabase_user.get("access_token") or create_local_token(user)
+    supabase_session = supabase_password_login(email, payload.password)
+    access_token = supabase_session.get("access_token") or supabase_user.get("access_token") or create_local_token(user)
     return {"access_token": access_token, "token_type": "bearer", "user": {"id": user.id, "full_name": user.full_name, "email": user.email, "role": user.role}, "account": {"id": account.id, "account_number": account.account_number}}
 
 

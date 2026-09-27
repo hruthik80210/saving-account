@@ -71,7 +71,9 @@ def create_customer(
     )
     db.add(account)
     db.commit()
-    return {"user": customer, "account": account, "access_token": supabase_user.get("access_token") or create_local_token(customer)}
+    supabase_session = supabase_password_login(email, payload.password)
+    access_token = supabase_session.get("access_token") or supabase_user.get("access_token") or create_local_token(customer)
+    return {"user": customer, "account": account, "access_token": access_token}
 
 
 @router.patch("/{customer_id}", response_model=ProfileResponse)
